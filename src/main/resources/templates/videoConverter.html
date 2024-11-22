@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Homepage</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}"/>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+</head>
+<body>
+
+
+<form method="post" class="upload-form" id="upload-form" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="fileUpload">Upload a file:</label>
+        <input type="file" name="file" id="fileUpload">
+    </div>
+    <div class="form-group">
+        <label for="fileUrl">Or enter file URL:</label>
+        <input type="text" name="fileUrl" id="fileUrl" placeholder="Paste your file URL here">
+    </div>
+    <label for="authorName"></label>
+    <input type="text" name="authorName" class="text-field" placeholder="Enter author's name" id="authorName"/>
+    <button id="startButton" type="submit" class="start-button">Start</button>
+</form>
+
+<div class="message-and-loader">
+    <div id="message" style="display: none;"></div>
+    <div id="webSocketErrorMessage" style="display: none;"></div>
+    <div id="httpErrorMessage" style="display: none;"></div>
+    <div class="loader"></div>
+    <button id="retryButton" class="start-button" style="display: none;">Retry</button>
+</div>
+
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const username = /*[[${username}]]*/ '';  // // Получаем username из модели Spring
+    console.log('Username:', username);
+    let webSocket;
+    const maxRetries = 3; // Максимальное количество попыток переподключения
+    let retryCount = 0; // Текущее количество попыток
+
+    function connect(callback) {
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const wsUrl = protocol + window.location.host + '/ws?username=' + encodeURIComponent(username);
+        webSocket = new WebSocket(wsUrl);
+
+        webSocket.onopen = function () {
+            console.log("WebSocket connection established.");
+            retryCount = 0; // Сброс счетчика попыток при успешном подключении
+            document.getElementById('webSocketErrorMessage').style.display = 'none';
+            document.getElementById('httpErrorMessage').style.display = 'none';
+
+            if (callback) callback(); // Если callback передан, вызываем его
+        };
+
+
+        webSocket.onmessage = function (event) {
+            const message = event.data;
+            console.log("Received message: " + message);
+
+            if (!message) {
+                console.warn("Received empty or undefined message");
+                return;
+            }
+
+            if (message.startsWith("http://") || message.startsWith("https://")) {
+                showLoader(false);
+                window.location.href = message;
+
+                // Обработка ошибок
+            } else if (message.startsWith("ERROR:")) {
+                const errorText = message.substring(6).trim();
+
+                console.log("Displaying WebSocket error message:", errorText);
+                document.getElementById('webSocketErrorMessage').textContent = errorText;
+                document.getElementById('webSocketErrorMessage').style.display = 'block';
+
+                showLoader(false);
+                document.getElementById('startButton').style.display = 'none'; // Скрываем кнопку "Start"
+
+            } else if (message.startsWith("STATUS:")) {
+                // Обработка статусов обработки
+                showLoader(true);
+                document.getElementById('message').textContent = message.substring(7).trim(); // Убираем префикс "STATUS:"
+                document.getElementById('message').style.display = 'block';
+            } else {
+                // Неизвестное сообщение, можно проигнорировать или обработать
+                console.warn("Unknown message received:", message);
+            }
+        };
+
+
+        webSocket.onerror = function (error) {
+            console.error("WebSocket error: " + error);
+            document.getElementById('webSocketErrorMessage').textContent = "Hmmm... it seems like something went wrong";
+            document.getElementById('webSocketErrorMessage').style.display = 'block';
+            showLoader(false);
+            document.getElementById('startButton').style.display = 'none'; // Скрываем кнопку "Start"
+            setTimeout(function () {
+                window.location.reload();
+            }, 5000);
+        };
+
+        webSocket.onclose = function () {
+            console.log("WebSocket connection closed.");
+            showLoader(false);
+            if (retryCount < maxRetries) {
+                retryCount++;
+                setTimeout(connect, 3000); // Попытка переподключения через 3 секунды
+            } else {
+                // Показываем сообщение об ошибке и перезагружаем страницу через 5 секунд
+                document.getElementById('webSocketErrorMessage').textContent = "Unable to establish connection. Please try again later.";
+                document.getElementById('webSocketErrorMessage').style.display = 'block';
+
+                setTimeout(function () {
+                    window.location.reload();
+                }, 5000);
+            }
+        };
+    }
+
+    function sendData() {
+
+        // Очистка предыдущих сообщений об ошибках и статусах
+        document.getElementById('message').style.display = 'none';
+        document.getElementById('httpErrorMessage').style.display = 'none';
+        document.getElementById('webSocketErrorMessage').style.display = 'none';
+        document.getElementById('retryButton').style.display = 'none';
+
+        // Получаем значения из полей формы
+        const fileUrl = document.getElementById('fileUrl').value;
+        const file = document.getElementById('fileUpload').files[0];
+        const authorName = document.getElementById('authorName').value;
+
+        // Проверяем, что поля не пустые
+        if (!fileUrl.trim() && !file) {
+            alert("No file or URL provided.");
+            return; // Прекращаем выполнение функции, если поля пустые
+        } else if (fileUrl.trim() && file) {
+            alert("Please use either a file or a URL, not both.");
+            return; // Прекращаем выполнение функции, если оба поля заполнены
+        } else if (!authorName.trim()) {
+            alert("Please fill in author's name.");
+            return; // Прекращаем выполнение функции, если поле пустое
+        }
+
+        showLoader(true);
+
+        // Подготавливаем данные для отправки
+        if (file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("authorName", authorName);
+
+            // Проверяем и устанавливаем WebSocket-соединение
+            ensureWebSocketConnection(function () {
+                console.log("WebSocket is ready after page load.");
+            });
+
+            fetch('/upload-file', {
+                method: 'POST',
+                headers: {
+                    'username': String(username) // Здесь передаем username
+                },
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        // Попытка извлечь сообщение об ошибке из тела ответа
+                        return response.text().then(errorMessage => {
+                            throw new Error(errorMessage || 'Network response was not ok ' + response.statusText);
+                        });
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log(data);
+                    document.getElementById('message').textContent = data;
+                    document.getElementById('message').style.display = 'block';
+                    showLoader(false);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('message').style.display = 'none';
+                    showLoader(false);
+                    // Показываем кнопку "Retry"
+                    document.getElementById('retryButton').style.display = 'block';
+                });
+
+        } else if (fileUrl.trim()) {
+            // Отправляем данные на сервер через WebSocket
+            if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+                const message = JSON.stringify({fileUrl: fileUrl, authorName: authorName});
+                try {
+                    webSocket.send(message);
+                    showLoader(true);
+                } catch (error) {
+                    console.error("Error sending data via WebSocket:", error);
+                    document.getElementById('webSocketErrorMessage').textContent = "Error sending data. Please try again.";
+                    document.getElementById('webSocketErrorMessage').style.display = 'block';
+                    showLoader(false);
+                    // Показываем кнопку "Retry"
+                    document.getElementById('retryButton').style.display = 'block';
+                }
+            }
+        } else {
+            console.error("The WebSocket connection is not established.");
+            // Показываем сообщение об ошибке
+            document.getElementById('webSocketErrorMessage').textContent = "Your connection is not established.";
+            document.getElementById('webSocketErrorMessage').style.display = 'block';
+            showLoader(false);
+            document.getElementById('retryButton').style.display = 'block';
+        }
+    }
+
+    function showLoader(show) {
+        console.log("showLoader called with:", show);
+        document.querySelector('.loader').style.display = show ? 'block' : 'none';
+    }
+
+    function ensureWebSocketConnection(callback) {
+        if (!webSocket || webSocket.readyState !== WebSocket.OPEN) {
+            console.log("Attempting to establish WebSocket connection...");
+            connect(callback); // Передаем callback в функцию connect
+        } else {
+            callback(); // Если соединение уже открыто, вызываем callback немедленно
+        }
+    }
+
+    connect();
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const uploadForm = document.getElementById('upload-form');
+        uploadForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Предотвращаем стандартную отправку формы
+
+            sendData();
+        });
+
+        // Добавляем обработчик для кнопки "Retry"
+        const retryButton = document.getElementById('retryButton');
+        retryButton.addEventListener('click', function() {
+
+            // Получаем значения из полей формы
+            const fileUrl = document.getElementById('fileUrl').value;
+            const file = document.getElementById('fileUpload').files[0];
+            const authorName = document.getElementById('authorName').value;
+
+            // Проверяем, что поля не пустые
+            if (!fileUrl.trim() && !file) {
+                alert("No file or URL provided.");
+                return; // Прекращаем выполнение функции, если поля пустые
+            } else if (fileUrl.trim() && file) {
+                alert("Please use either a file or a URL, not both.");
+                return; // Прекращаем выполнение функции, если оба поля заполнены
+            } else if (!authorName.trim()) {
+                alert("Please fill in author's name.");
+                return; // Прекращаем выполнение функции, если поле пустое
+            }
+
+            // Очистка предыдущих сообщений об ошибках и статусах
+            document.getElementById('message').style.display = 'none';
+            document.getElementById('httpErrorMessage').style.display = 'none';
+            document.getElementById('webSocketErrorMessage').style.display = 'none';
+
+            // Скрываем кнопку "Retry"
+            retryButton.style.display = 'none';
+
+            // Повторная отправка данных
+            sendData();
+        });
+    });
+    /*]]>*/
+</script>
+</body>
+</html>
+

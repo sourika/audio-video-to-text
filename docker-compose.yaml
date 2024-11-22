@@ -1,0 +1,8 @@
+version: '3.9'
+services:
+  server:
+    build: .
+    ports:
+      - '${SERVER_PORT}:8080'
+    env_file:
+      - .env

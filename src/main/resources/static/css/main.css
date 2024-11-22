@@ -1,0 +1,80 @@
+.message-and-loader {
+    display: flex;
+    align-items: center; /* Выравнивание элементов по вертикали */
+    justify-content: center; /* Центрирование элементов по горизонтали */
+    width: 100%; /* Занимает всю ширину контейнера */
+    margin-top: 20px;
+}
+
+#message {
+    text-align: center; /* Центрирование текста внутри #message */
+}
+
+#message, #webSocketErrorMessage, #httpErrorMessage {
+    font-size: 16px;
+    font-family: Arial, sans-serif;/* Применяем тот же размер шрифта, что и для .text-field */
+}
+
+#webSocketErrorMessage, #httpErrorMessage {
+    color: red;
+}
+
+h2 {
+    color: #333;
+}
+
+.link-form {
+    display: inline-block;
+    margin-top: 20px;
+}
+
+.upload-form {
+    background-color: #f9f9f9; /* Легкий фоновый цвет */
+    padding: 20px;
+    border-radius: 8px; /* Скругление углов */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Небольшая тень для лучшей визуальной отделенности */
+}
+
+.text-field {
+    padding: 10px;
+    border: 2px solid green;
+    border-radius: 5px;
+    outline: none;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+}
+
+.text-field::placeholder {
+    color: #aaa;
+}
+
+.start-button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: green;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.start-button:hover {
+    background-color: darkgreen;
+}
+
+
+.loader {
+    display: none;
+    border: 5px solid #f3f3f3; /* Light grey */
+    border-top: 5px solid green; /* Blue */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

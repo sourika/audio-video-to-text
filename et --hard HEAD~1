@@ -1,0 +1,59 @@
+[33mcommit f4ad37eb27befb63faff7ebfea219125de30290f[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Thu Feb 1 13:24:29 2024 +0100
+
+    make it better
+
+[33mcommit d6dfd1c06d13c6445951f0ced78813bbc330cdbf[m[33m ([m[1;31mheroku/master[m[33m)[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Wed Nov 22 21:18:24 2023 +0100
+
+    Added handler for root URL
+
+[33mcommit 6334e10796c5a68b8d6a8e3280c0f0fc3476f937[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Wed Nov 22 19:48:12 2023 +0100
+
+    Specify Java version for Heroku
+
+[33mcommit 28f9802b8beac354b8b5c6e164d0ff0ea91d2e30[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Wed Nov 22 18:19:44 2023 +0100
+
+    Updated Java version to 17 in project settings
+
+[33mcommit 4a70891388015536865ee1b62e64001beeaf9bd8[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Fri Nov 17 23:04:26 2023 +0100
+
+    Specify the JDK version
+
+[33mcommit e4d9600dbb99f2ea7f72be2a5017b4f45ab9c578[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Fri Nov 17 22:40:55 2023 +0100
+
+    Changed Java version
+
+[33mcommit 9deaf8e1992c5f2a47f8e4afad51732b58d900e1[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Fri Nov 17 22:23:14 2023 +0100
+
+    Updated maven-compiler-plugin version
+
+[33mcommit 64f1f6c22fec35de809d1158745c7a80ba0f6c79[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Fri Nov 17 22:15:40 2023 +0100
+
+    Added maven-compiler-plugin
+
+[33mcommit b3fe5f445b400c8729bec385e9e1bff32275c392[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Fri Nov 17 22:01:43 2023 +0100
+
+    Moved variables from properties to Heroku environment settings
+
+[33mcommit 911118bf4d49e0e1ee76cd5b163c1dec083d3c4c[m
+Author: Nadzeya Nialiubina <sessiaminsk@gmail.com>
+Date:   Fri Nov 17 19:30:56 2023 +0100
+
+    Initial commit
