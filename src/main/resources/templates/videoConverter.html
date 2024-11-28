@@ -14,17 +14,24 @@
 
 
 <form method="post" class="upload-form" id="upload-form" enctype="multipart/form-data">
+<!--    <div class="form-group">-->
+<!--        <label for="fileUpload">Upload a file:</label>-->
+<!--        <input type="file" name="file" id="fileUpload">-->
+<!--    </div>-->
+<!--    <button id="startButton" type="submit" class="start-button" style="display: none;">Start</button>-->
+<!--</form>-->
+
+<!--<div class="message-and-loader">-->
+<!--    <div id="message" style="display: none;"></div>-->
+<!--    <div id="webSocketErrorMessage" style="display: none;"></div>-->
+<!--    <div id="httpErrorMessage" style="display: none;"></div>-->
+<!--    <div class="loader"></div>-->
+<!--</div>-->
     <div class="form-group">
-        <label for="fileUpload">Upload a file:</label>
-        <input type="file" name="file" id="fileUpload">
+        <label for="fileUpload" class="custom-file-upload">Choose File</label>
+        <input type="file" name="file" id="fileUpload" class="file-input">
+        <button id="startButton" type="submit" class="start-button" style="display: none;">Start</button>
     </div>
-    <div class="form-group">
-        <label for="fileUrl">Or enter file URL:</label>
-        <input type="text" name="fileUrl" id="fileUrl" placeholder="Paste your file URL here">
-    </div>
-    <label for="authorName"></label>
-    <input type="text" name="authorName" class="text-field" placeholder="Enter author's name" id="authorName"/>
-    <button id="startButton" type="submit" class="start-button">Start</button>
 </form>
 
 <div class="message-and-loader">
@@ -32,7 +39,6 @@
     <div id="webSocketErrorMessage" style="display: none;"></div>
     <div id="httpErrorMessage" style="display: none;"></div>
     <div class="loader"></div>
-    <button id="retryButton" class="start-button" style="display: none;">Retry</button>
 </div>
 
 
@@ -41,240 +47,203 @@
     const username = /*[[${username}]]*/ '';  // // Получаем username из модели Spring
     console.log('Username:', username);
     let webSocket;
-    const maxRetries = 3; // Максимальное количество попыток переподключения
-    let retryCount = 0; // Текущее количество попыток
+    const maxRetries = 3;
+    let retryCount = 0;
 
-    function connect(callback) {
+    function connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const wsUrl = protocol + window.location.host + '/ws?username=' + encodeURIComponent(username);
+        const wsUrl = `${protocol}${window.location.host}/ws?username=${encodeURIComponent(username)}`;
         webSocket = new WebSocket(wsUrl);
 
         webSocket.onopen = function () {
-            console.log("WebSocket connection established.");
-            retryCount = 0; // Сброс счетчика попыток при успешном подключении
-            document.getElementById('webSocketErrorMessage').style.display = 'none';
-            document.getElementById('httpErrorMessage').style.display = 'none';
-
-            if (callback) callback(); // Если callback передан, вызываем его
+            console.log("WebSocket connection established");
+            retryCount = 0;
+            hideError();
         };
-
 
         webSocket.onmessage = function (event) {
             const message = event.data;
-            console.log("Received message: " + message);
-
             if (!message) {
-                console.warn("Received empty or undefined message");
+                console.warn("Received empty message");
                 return;
             }
 
-            if (message.startsWith("http://") || message.startsWith("https://")) {
-                showLoader(false);
-                window.location.href = message;
-
-                // Обработка ошибок
-            } else if (message.startsWith("ERROR:")) {
+            if (message.startsWith("ERROR:")) {
                 const errorText = message.substring(6).trim();
-
-                console.log("Displaying WebSocket error message:", errorText);
-                document.getElementById('webSocketErrorMessage').textContent = errorText;
-                document.getElementById('webSocketErrorMessage').style.display = 'block';
-
-                showLoader(false);
-                document.getElementById('startButton').style.display = 'none'; // Скрываем кнопку "Start"
-
+                handleFileError(errorText);
             } else if (message.startsWith("STATUS:")) {
-                // Обработка статусов обработки
-                showLoader(true);
-                document.getElementById('message').textContent = message.substring(7).trim(); // Убираем префикс "STATUS:"
-                document.getElementById('message').style.display = 'block';
+                updateStatus(message.substring(7).trim());
+            } else if (message.startsWith("DOWNLOAD:")) {
+                // Получаем URL для скачивания
+                const downloadUrl = message.substring(9).trim();
+                showDownloadButton(downloadUrl);
             } else {
-                // Неизвестное сообщение, можно проигнорировать или обработать
-                console.warn("Unknown message received:", message);
+                console.warn("Unknown message:", message);
             }
         };
 
-
         webSocket.onerror = function (error) {
-            console.error("WebSocket error: " + error);
-            document.getElementById('webSocketErrorMessage').textContent = "Hmmm... it seems like something went wrong";
-            document.getElementById('webSocketErrorMessage').style.display = 'block';
-            showLoader(false);
-            document.getElementById('startButton').style.display = 'none'; // Скрываем кнопку "Start"
-            setTimeout(function () {
-                window.location.reload();
-            }, 5000);
+            console.error("WebSocket error:", error);
+            handleFileError("Connection error occurred. Page will reload shortly...");
+            schedulePageReload();
         };
 
         webSocket.onclose = function () {
-            console.log("WebSocket connection closed.");
+            console.log("WebSocket connection closed");
             showLoader(false);
+
             if (retryCount < maxRetries) {
                 retryCount++;
-                setTimeout(connect, 3000); // Попытка переподключения через 3 секунды
+                setTimeout(connectWebSocket, 3000);
             } else {
-                // Показываем сообщение об ошибке и перезагружаем страницу через 5 секунд
-                document.getElementById('webSocketErrorMessage').textContent = "Unable to establish connection. Please try again later.";
-                document.getElementById('webSocketErrorMessage').style.display = 'block';
-
-                setTimeout(function () {
-                    window.location.reload();
-                }, 5000);
+                handleFileError("Connection lost. Page will reload shortly...");
+                schedulePageReload();
             }
         };
     }
 
-    function sendData() {
 
-        // Очистка предыдущих сообщений об ошибках и статусах
-        document.getElementById('message').style.display = 'none';
-        document.getElementById('httpErrorMessage').style.display = 'none';
-        document.getElementById('webSocketErrorMessage').style.display = 'none';
-        document.getElementById('retryButton').style.display = 'none';
-
-        // Получаем значения из полей формы
-        const fileUrl = document.getElementById('fileUrl').value;
-        const file = document.getElementById('fileUpload').files[0];
-        const authorName = document.getElementById('authorName').value;
-
-        // Проверяем, что поля не пустые
-        if (!fileUrl.trim() && !file) {
-            alert("No file or URL provided.");
-            return; // Прекращаем выполнение функции, если поля пустые
-        } else if (fileUrl.trim() && file) {
-            alert("Please use either a file or a URL, not both.");
-            return; // Прекращаем выполнение функции, если оба поля заполнены
-        } else if (!authorName.trim()) {
-            alert("Please fill in author's name.");
-            return; // Прекращаем выполнение функции, если поле пустое
-        }
-
+    function updateStatus(status) {
         showLoader(true);
+        const messageElement = document.getElementById('message');
+        messageElement.textContent = status;
+        messageElement.style.display = 'block';
+    }
 
-        // Подготавливаем данные для отправки
-        if (file) {
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("authorName", authorName);
+    function handleFileError(errorMessage) {
+        showLoader(false);
+        const errorElement = document.getElementById('webSocketErrorMessage');
+        errorElement.textContent = errorMessage;
+        errorElement.style.display = 'block';
 
-            // Проверяем и устанавливаем WebSocket-соединение
-            ensureWebSocketConnection(function () {
-                console.log("WebSocket is ready after page load.");
-            });
+        document.getElementById('startButton').style.display = 'block';
+        // document.getElementById('retryButton').style.display = 'block';
+    }
 
-            fetch('/upload-file', {
-                method: 'POST',
-                headers: {
-                    'username': String(username) // Здесь передаем username
-                },
-                body: formData
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        // Попытка извлечь сообщение об ошибке из тела ответа
-                        return response.text().then(errorMessage => {
-                            throw new Error(errorMessage || 'Network response was not ok ' + response.statusText);
-                        });
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    console.log(data);
-                    document.getElementById('message').textContent = data;
-                    document.getElementById('message').style.display = 'block';
-                    showLoader(false);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('message').style.display = 'none';
-                    showLoader(false);
-                    // Показываем кнопку "Retry"
-                    document.getElementById('retryButton').style.display = 'block';
-                });
-
-        } else if (fileUrl.trim()) {
-            // Отправляем данные на сервер через WebSocket
-            if (webSocket && webSocket.readyState === WebSocket.OPEN) {
-                const message = JSON.stringify({fileUrl: fileUrl, authorName: authorName});
-                try {
-                    webSocket.send(message);
-                    showLoader(true);
-                } catch (error) {
-                    console.error("Error sending data via WebSocket:", error);
-                    document.getElementById('webSocketErrorMessage').textContent = "Error sending data. Please try again.";
-                    document.getElementById('webSocketErrorMessage').style.display = 'block';
-                    showLoader(false);
-                    // Показываем кнопку "Retry"
-                    document.getElementById('retryButton').style.display = 'block';
-                }
-            }
-        } else {
-            console.error("The WebSocket connection is not established.");
-            // Показываем сообщение об ошибке
-            document.getElementById('webSocketErrorMessage').textContent = "Your connection is not established.";
-            document.getElementById('webSocketErrorMessage').style.display = 'block';
-            showLoader(false);
-            document.getElementById('retryButton').style.display = 'block';
-        }
+    function hideError() {
+        document.getElementById('webSocketErrorMessage').style.display = 'none';
+        document.getElementById('httpErrorMessage').style.display = 'none';
     }
 
     function showLoader(show) {
-        console.log("showLoader called with:", show);
         document.querySelector('.loader').style.display = show ? 'block' : 'none';
     }
 
-    function ensureWebSocketConnection(callback) {
-        if (!webSocket || webSocket.readyState !== WebSocket.OPEN) {
-            console.log("Attempting to establish WebSocket connection...");
-            connect(callback); // Передаем callback в функцию connect
-        } else {
-            callback(); // Если соединение уже открыто, вызываем callback немедленно
+    function schedulePageReload() {
+        setTimeout(() => window.location.reload(), 5000);
+    }
+
+    function validateFileInput() {
+        const fileInput = document.getElementById('fileUpload');
+        if (!fileInput.files[0]) {
+            alert("Please select a file");
+            return false;
+        }
+        return true;
+    }
+
+    function clearMessages() {
+        document.getElementById('message').style.display = 'none';
+        document.getElementById('httpErrorMessage').style.display = 'none';
+        document.getElementById('webSocketErrorMessage').style.display = 'none';
+    }
+
+    function showDownloadButton(downloadUrl) {
+        // Очищаем предыдущие сообщения
+        clearMessages();
+
+        // Показываем сообщение об успехе
+        const messageElement = document.getElementById('message');
+        messageElement.textContent = 'Transcription is ready!';
+        messageElement.style.display = 'block';
+
+        // Создаем кнопку скачивания
+        const downloadButton = document.createElement('a');
+        downloadButton.href = downloadUrl;
+        downloadButton.className = 'start-button';
+        downloadButton.textContent = 'Download';
+
+        // Добавляем кнопку на страницу
+        const container = document.querySelector('.message-and-loader');
+        container.appendChild(downloadButton);
+
+        // Скрываем лоадер
+        showLoader(false);
+    }
+
+
+    async function uploadFile(formData) {
+        try {
+            const response = await fetch('/upload-file', {
+                method: 'POST',
+                headers: {
+                    'username': String(username)
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                throw new Error(errorMessage || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.text();
+            console.log('Upload successful:', data);
+
+        } catch (error) {
+            console.error('Upload failed:', error);
         }
     }
 
-    connect();
-
     document.addEventListener('DOMContentLoaded', function () {
+        connectWebSocket();
 
         const uploadForm = document.getElementById('upload-form');
-        uploadForm.addEventListener('submit', function (event) {
-            event.preventDefault(); // Предотвращаем стандартную отправку формы
+        const fileInput = document.getElementById('fileUpload');
+        const startButton = document.getElementById('startButton');
+        const fileLabel = document.querySelector('.custom-file-upload');
 
-            sendData();
+        uploadForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            if (!validateFileInput()) return;
+
+            clearMessages();
+
+            document.getElementById('startButton').style.display = 'none';
+
+            if (webSocket?.readyState === WebSocket.OPEN) {
+                showLoader(true);
+                const formData = new FormData();
+                formData.append("file", fileInput.files[0]);
+                await uploadFile(formData);
+            } else {
+                handleFileError("No connection available. Please try again.");
+            }
         });
 
-        // Добавляем обработчик для кнопки "Retry"
-        const retryButton = document.getElementById('retryButton');
-        retryButton.addEventListener('click', function() {
 
-            // Получаем значения из полей формы
-            const fileUrl = document.getElementById('fileUrl').value;
-            const file = document.getElementById('fileUpload').files[0];
-            const authorName = document.getElementById('authorName').value;
+        fileInput.addEventListener('change', function () {
+            clearMessages();
 
-            // Проверяем, что поля не пустые
-            if (!fileUrl.trim() && !file) {
-                alert("No file or URL provided.");
-                return; // Прекращаем выполнение функции, если поля пустые
-            } else if (fileUrl.trim() && file) {
-                alert("Please use either a file or a URL, not both.");
-                return; // Прекращаем выполнение функции, если оба поля заполнены
-            } else if (!authorName.trim()) {
-                alert("Please fill in author's name.");
-                return; // Прекращаем выполнение функции, если поле пустое
+            // Убираем кнопку Download и показываем кнопку Start
+            const downloadButton = document.querySelector('.message-and-loader a.start-button');
+            if (downloadButton) {
+                downloadButton.remove();
             }
 
-            // Очистка предыдущих сообщений об ошибках и статусах
-            document.getElementById('message').style.display = 'none';
-            document.getElementById('httpErrorMessage').style.display = 'none';
-            document.getElementById('webSocketErrorMessage').style.display = 'none';
+            if (fileInput.files.length > 0) {
+                fileLabel.textContent = fileInput.files[0].name;
 
-            // Скрываем кнопку "Retry"
-            retryButton.style.display = 'none';
-
-            // Повторная отправка данных
-            sendData();
+                // Показываем кнопку "Start" только если выбран файл
+                startButton.style.display = 'block';
+            } else {
+                fileLabel.textContent = 'Choose File';
+                // Скрываем кнопку "Start", если файл не выбран
+                startButton.style.display = 'none';
+            }
         });
+
     });
     /*]]>*/
 </script>

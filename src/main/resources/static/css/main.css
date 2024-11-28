@@ -1,3 +1,147 @@
+/*.container {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    align-items: center;*/
+/*    width: 100%;*/
+/*    padding: 20px;*/
+/*}*/
+
+/*.upload-controls {*/
+/*    display: flex;*/
+/*    gap: 10px; !* Расстояние между кнопками *!*/
+/*    justify-content: center;*/
+/*    width: 100%;*/
+/*    max-width: 600px; !* Максимальная ширина контейнера с кнопками *!*/
+/*}*/
+
+/*!* Стилизация input type="file" *!*/
+/*.custom-file-upload {*/
+/*    display: inline-block;*/
+/*    padding: 10px 20px;*/
+/*    background-color: #ffffff;*/
+/*    border: 2px solid green;*/
+/*    border-radius: 5px;*/
+/*    cursor: pointer;*/
+/*    font-size: 16px;*/
+/*    min-width: 120px;*/
+/*    text-align: center;*/
+/*}*/
+
+/*.custom-file-upload:hover {*/
+/*    background-color: #f0f0f0;*/
+/*}*/
+
+/*!* Скрываем стандартный input file *!*/
+/*input[type="file"] {*/
+/*    display: none;*/
+/*}*/
+
+/*.start-button {*/
+/*    padding: 10px 20px;*/
+/*    border: none;*/
+/*    border-radius: 5px;*/
+/*    background-color: green;*/
+/*    color: white;*/
+/*    font-size: 16px;*/
+/*    cursor: pointer;*/
+/*    min-width: 120px; !* Одинаковая ширина с кнопкой выбора файла *!*/
+/*}*/
+
+/*.start-button:hover {*/
+/*    background-color: darkgreen;*/
+/*}*/
+
+/*.message-and-loader {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    align-items: center;*/
+/*    margin-top: 20px;*/
+/*    width: 100%;*/
+/*}*/
+
+
+/*!*.message-and-loader {*!*/
+/*!*    display: flex;*!*/
+/*!*    align-items: center; !* Выравнивание элементов по вертикали *!*!*/
+/*!*    justify-content: center; !* Центрирование элементов по горизонтали *!*!*/
+/*!*    width: 100%; !* Занимает всю ширину контейнера *!*!*/
+/*!*    margin-top: 20px;*!*/
+/*!*}*!*/
+
+/*#message {*/
+/*    text-align: center; !* Центрирование текста внутри #message *!*/
+/*}*/
+
+/*#message, #webSocketErrorMessage, #httpErrorMessage {*/
+/*    font-size: 16px;*/
+/*    font-family: Arial, sans-serif;!* Применяем тот же размер шрифта, что и для .text-field *!*/
+/*}*/
+
+/*#webSocketErrorMessage, #httpErrorMessage {*/
+/*    color: red;*/
+/*}*/
+
+/*h2 {*/
+/*    color: #333;*/
+/*}*/
+
+/*.link-form {*/
+/*    display: inline-block;*/
+/*    margin-top: 20px;*/
+/*}*/
+
+/*.upload-form {*/
+/*    background-color: #f9f9f9; !* Легкий фоновый цвет *!*/
+/*    padding: 20px;*/
+/*    border-radius: 8px; !* Скругление углов *!*/
+/*    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); !* Небольшая тень для лучшей визуальной отделенности *!*/
+/*}*/
+
+/*.text-field {*/
+/*    padding: 10px;*/
+/*    border: 2px solid green;*/
+/*    border-radius: 5px;*/
+/*    outline: none;*/
+/*    font-size: 16px;*/
+/*    font-family: Arial, sans-serif;*/
+/*}*/
+
+/*.text-field::placeholder {*/
+/*    color: #aaa;*/
+/*}*/
+
+/*!*.start-button {*!*/
+/*!*    padding: 10px 20px;*!*/
+/*!*    margin-left: 10px;*!*/
+/*!*    border: none;*!*/
+/*!*    border-radius: 5px;*!*/
+/*!*    background-color: green;*!*/
+/*!*    color: white;*!*/
+/*!*    font-size: 16px;*!*/
+/*!*    cursor: pointer;*!*/
+/*!*    text-decoration: none;*!*/
+/*!*}*!*/
+
+/*!*.start-button:hover {*!*/
+/*!*    background-color: darkgreen;*!*/
+/*!*}*!*/
+
+
+/*.loader {*/
+/*    display: none;*/
+/*    border: 5px solid #f3f3f3; !* Light grey *!*/
+/*    border-top: 5px solid green; !* Blue *!*/
+/*    border-radius: 50%;*/
+/*    width: 30px;*/
+/*    height: 30px;*/
+/*    animation: spin 2s linear infinite;*/
+/*}*/
+
+/*@keyframes spin {*/
+/*    0% { transform: rotate(0deg); }*/
+/*    100% { transform: rotate(360deg); }*/
+/*}*/
+
 .message-and-loader {
     display: flex;
     align-items: center; /* Выравнивание элементов по вертикали */
@@ -6,63 +150,37 @@
     margin-top: 20px;
 }
 
-#message {
-    text-align: center; /* Центрирование текста внутри #message */
-}
-
-#message, #webSocketErrorMessage, #httpErrorMessage {
-    font-size: 16px;
-    font-family: Arial, sans-serif;/* Применяем тот же размер шрифта, что и для .text-field */
-}
-
-#webSocketErrorMessage, #httpErrorMessage {
-    color: red;
-}
-
-h2 {
-    color: #333;
-}
-
-.link-form {
-    display: inline-block;
-    margin-top: 20px;
-}
-
 .upload-form {
-    background-color: #f9f9f9; /* Легкий фоновый цвет */
-    padding: 20px;
-    border-radius: 8px; /* Скругление углов */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Небольшая тень для лучшей визуальной отделенности */
+    display: flex;
+    align-items: center; /* Выравнивание кнопок по вертикали */
+    justify-content: center; /* Центрирование кнопок по горизонтали */
+    gap: 10px; /* Расстояние между элементами */
+    margin-top: 20px; /* Отступ сверху */
 }
 
-.text-field {
-    padding: 10px;
-    border: 2px solid green;
-    border-radius: 5px;
-    outline: none;
-    font-size: 16px;
-    font-family: Arial, sans-serif;
+.form-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Расстояние между полем для загрузки файла и кнопкой Start */
 }
 
-.text-field::placeholder {
-    color: #aaa;
-}
 
 .start-button {
     padding: 10px 20px;
-    margin-left: 10px;
     border: none;
     border-radius: 5px;
     background-color: green;
     color: white;
     font-size: 16px;
     cursor: pointer;
+    text-decoration: none;
+    height: 42px; /* Совместим по высоте с элементом загрузки файла */
 }
 
 .start-button:hover {
     background-color: darkgreen;
 }
-
 
 .loader {
     display: none;
@@ -77,4 +195,39 @@ h2 {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Стилизация input type="file" */
+.custom-file-upload {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border: 2px solid green;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.custom-file-upload:hover {
+    background-color: #f0f0f0;
+}
+
+/* Скрываем стандартный input file */
+input[type="file"] {
+    display: none;
+}
+
+#message {
+    text-align: center;
+}
+
+#message, #webSocketErrorMessage, #httpErrorMessage {
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+}
+
+#webSocketErrorMessage, #httpErrorMessage {
+    color: red;
 }
