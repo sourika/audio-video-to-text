@@ -12,12 +12,12 @@
 </head>
 <body>
 
-<!--<div class="container">-->
+
 <form method="post" class="upload-form" id="upload-form" enctype="multipart/form-data">
     <div class="form-group">
         <label for="fileUpload" class="custom-file-upload">Choose File</label>
         <input type="file" name="file" id="fileUpload" class="file-input">
-        <button id="startButton" type="submit" class="button-base" style="display: none;">Start</button>
+        <button id="startButton" type="submit" class="button-base" style="display: block;">Start</button>
     </div>
 </form>
 
@@ -27,7 +27,6 @@
     <div id="httpErrorMessage" style="display: none;"></div>
     <div class="loader"></div>
 </div>
-<!--</div>-->
 
 
 <script th:inline="javascript">
@@ -105,7 +104,6 @@
         errorElement.style.display = 'block';
 
         document.getElementById('startButton').style.display = 'block';
-        // document.getElementById('retryButton').style.display = 'block';
     }
 
     function hideError() {
@@ -219,19 +217,16 @@
 
             // Убираем кнопку Download и показываем кнопку Start
             const downloadButton = document.querySelector('.message-and-loader button.button-base');
+
             if (downloadButton) {
                 downloadButton.remove();
             }
-
             if (fileInput.files.length > 0) {
                 fileLabel.textContent = fileInput.files[0].name;
-
-                // Показываем кнопку "Start" только если выбран файл
                 startButton.style.display = 'block';
             } else {
                 fileLabel.textContent = 'Choose File';
-                // Скрываем кнопку "Start", если файл не выбран
-                startButton.style.display = 'none';
+                startButton.style.display = 'block';
             }
         });
 

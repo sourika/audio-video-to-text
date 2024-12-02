@@ -15,7 +15,7 @@ WORKDIR /app
 RUN mkdir data
 
 # Копируем собранный .jar файл в контейнер
-COPY target/StreamToArticleConverter-0.0.1-SNAPSHOT.jar app.jar
+COPY target/transcriber-0.0.1-SNAPSHOT.jar app.jar
 
 
 # Открываем порт 8080 для доступа к приложению
