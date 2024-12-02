@@ -2,6 +2,7 @@ package com.example.transcriber.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -49,19 +50,19 @@ public class UploadService {
                     String prefixedFileName = "file-" + originalFileName; // Добавляем префикс "file-"
                     Path targetPath = targetDirectory.resolve(prefixedFileName); // Сохраняем файл с префиксом и оригинальным расширением
 
-                    return filePart.transferTo(targetPath)
-                            .thenReturn(targetPath.toString())
-                            .doOnSuccess(path -> log.info("File upload completed for Task ID: {}", taskId));
-                })
-                .onErrorResume(e -> {
-                    String errorMessage = "Error uploading file: " + filePart.filename();
-                    log.error(errorMessage, e);
+                    return DataBufferUtils.write(filePart.content(), targetPath)
+                            .then(Mono.just(targetPath.toString()))
+                            .doOnSuccess(path -> log.info("File upload completed for Task ID: {}", taskId))
+                            .onErrorResume(e -> {
+                                String errorMessage = "Error uploading file: " + filePart.filename();
+                                log.error(errorMessage, e);
 
-                    return Mono.when(
-                                    webSocketService.sendErrorMessage(username, "Error uploading file. Please try again."),
-                                    statusService.updateTaskStatus(taskId, "Error")
-                            )
-                            .then(Mono.error(new RuntimeException("Error uploading file", e)));
+                                return Mono.when(
+                                                webSocketService.sendErrorMessage(username, "Error uploading file. Please try again."),
+                                                statusService.updateTaskStatus(taskId, "Error")
+                                        )
+                                        .then(Mono.error(new RuntimeException("Error uploading file", e)));
+                            });
                 });
     }
 
@@ -70,8 +71,8 @@ public class UploadService {
         Path directoryPath = Paths.get(directoryPathStr);
 
         return Mono.fromCallable(() -> {
-                Files.createDirectories(directoryPath);
-                log.debug("Directories created at: {}", directoryPath);
+            Files.createDirectories(directoryPath);
+            log.debug("Directories created at: {}", directoryPath);
             return directoryPath;
         }).subscribeOn(Schedulers.boundedElastic());
     }
