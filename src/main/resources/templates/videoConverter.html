@@ -12,25 +12,12 @@
 </head>
 <body>
 
-
+<!--<div class="container">-->
 <form method="post" class="upload-form" id="upload-form" enctype="multipart/form-data">
-<!--    <div class="form-group">-->
-<!--        <label for="fileUpload">Upload a file:</label>-->
-<!--        <input type="file" name="file" id="fileUpload">-->
-<!--    </div>-->
-<!--    <button id="startButton" type="submit" class="start-button" style="display: none;">Start</button>-->
-<!--</form>-->
-
-<!--<div class="message-and-loader">-->
-<!--    <div id="message" style="display: none;"></div>-->
-<!--    <div id="webSocketErrorMessage" style="display: none;"></div>-->
-<!--    <div id="httpErrorMessage" style="display: none;"></div>-->
-<!--    <div class="loader"></div>-->
-<!--</div>-->
     <div class="form-group">
         <label for="fileUpload" class="custom-file-upload">Choose File</label>
         <input type="file" name="file" id="fileUpload" class="file-input">
-        <button id="startButton" type="submit" class="start-button" style="display: none;">Start</button>
+        <button id="startButton" type="submit" class="button-base" style="display: none;">Start</button>
     </div>
 </form>
 
@@ -40,6 +27,7 @@
     <div id="httpErrorMessage" style="display: none;"></div>
     <div class="loader"></div>
 </div>
+<!--</div>-->
 
 
 <script th:inline="javascript">
@@ -158,10 +146,13 @@
         messageElement.style.display = 'block';
 
         // Создаем кнопку скачивания
-        const downloadButton = document.createElement('a');
+        const downloadButton = document.createElement('button');
         downloadButton.href = downloadUrl;
-        downloadButton.className = 'start-button';
+        downloadButton.className = 'button-base';
         downloadButton.textContent = 'Download';
+        downloadButton.onclick = function () {
+            window.location.href = downloadUrl;
+        };
 
         // Добавляем кнопку на страницу
         const container = document.querySelector('.message-and-loader');
@@ -227,7 +218,7 @@
             clearMessages();
 
             // Убираем кнопку Download и показываем кнопку Start
-            const downloadButton = document.querySelector('.message-and-loader a.start-button');
+            const downloadButton = document.querySelector('.message-and-loader button.button-base');
             if (downloadButton) {
                 downloadButton.remove();
             }
